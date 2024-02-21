@@ -1,0 +1,98 @@
+#usage "<h3>Inverted Silkscreen</h3>"
+ "First create your art work (Polygon in layer 1 \"Top\" with text inside it on layer 41 \"tRestrict\" with vector font type).<br>"
+ "Click on \"Re-fill Polygon Pours\".<br>"
+ "Name the polygon with \"NEG_SILK\" to make it special from other normal polygons.<br>"
+ "Run <b>neg_silk_for_fusion.ulp</b><br><br>"
+ "<author>Authors: Christian Bohrer (Original), Yahya Tawil (Enhancment), Romain Lamothe (Autodesk Fusion port)</author>"
+
+
+ // THIS PROGRAM IS PROVIDED AS IS AND WITHOUT WARRANTY OF ANY KIND, EXPRESSED OR IMPLIED
+ /*
+ First Create by: Christian Bohrer (negasilk.ulp)
+ Edited by Yahya Tawil 2017 (neg_silk.ulp) Documentation: https://atadiat.com/en/e-negative-silkscreen-eagle-ulp/
+ Edited by Yahya Tawil 2020 Assert on polygon width zero to avoid zero width case which will result a long filling loop
+ Edited by Romain Lamothe 2024 Autodesk Fusion port
+ */
+	 
+string CMD="", SilkName="", silkspool="", Header = 
+"Set Wire_Bend 2;\n" + 
+"LAYER 21;\n" +	// YT 2017
+"GRID MM;\n\n" +
+"DISPLAY = MyLayers LAST; DISPLAY NONE tPlace;"; //YT 2017
+
+int Found = 0;
+real biggest_x=-2000, biggest_y=-2000,smallest_x=2000, smallest_y=2000; // YT 2017 biggest allowed value in MM
+
+string group="";
+/*
+if (board) board(B){ 
+SilkName = filesetext(B.name, "_.scr");
+}
+*/
+
+void compare(UL_WIRE W){
+	if(u2mm(W.x1)<smallest_x)
+		smallest_x=u2mm(W.x1);
+	
+	if(u2mm(W.x2)>biggest_x)
+		biggest_x=u2mm(W.x2);	
+		
+	if(u2mm(W.y1)<smallest_y)
+		smallest_y=u2mm(W.y1);
+	
+	if(u2mm(W.y2)>biggest_y)
+		biggest_y=u2mm(W.y2);
+}
+
+string Vectors(UL_WIRE W){
+ string h = "";
+ sprintf(h,"WIRE %3.4f (%3.4f %3.4f) (%3.4f %3.4f);\n", 
+ u2mm(W.width), u2mm(W.x1), u2mm(W.y1), u2mm(W.x2), u2mm(W.y2)); 
+ compare(W);
+ return h;
+}   
+
+ if (board) board(B){    
+  B.signals(S){   
+	if(S.name == "NEG_SILK")
+	{
+        Found = 1;
+        S.polyPours(P) // RL 2024 
+        {
+            if(P.width == 0) // zero size polygon will make an infinit loop with P.fillings loop member
+            {                // According to ULP manual: "Filling a polygon with zero width may result in enormous amounts of data"
+              dlgMessageBox("! Change \"NEG_SILK\" width to any value bigger than Zero.","+OK");
+              exit(-1);	
+            }
+            else
+            {             
+              P.contours(W){ if(W.layer == 1){silkspool += Vectors(W);}}
+              P.fillings(W){ if(W.layer == 1){silkspool += Vectors(W);}}
+            }
+        }
+    } 
+  }
+ }
+
+// YT 2017
+if(Found)
+{
+sprintf(group,"GROUP (%f %f) (%f %f) (%f %f) (%f %f) (%f %f);",smallest_x,smallest_y,biggest_x,smallest_y,biggest_x,biggest_y,smallest_x,biggest_y,smallest_x,smallest_y);
+CMD = Header + silkspool + group +"DISPLAY MyLayers;move (> 0 0)";
+exit(CMD); 
+}
+else
+{
+dlgMessageBox("! No Polygon with signal name \"NEG_SILK\" is found","+OK");
+exit(-1);	
+}
+//
+
+/*
+ silkspool+= "GRID LAST;\n";
+ 
+ output(SilkName){  
+ printf(Header);
+ printf(silkspool);
+ }
+*/
