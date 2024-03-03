@@ -12,6 +12,18 @@
  Edited by Yahya Tawil 2017 (neg_silk.ulp) Documentation: https://atadiat.com/en/e-negative-silkscreen-eagle-ulp/
  Edited by Yahya Tawil 2020 Assert on polygon width zero to avoid zero width case which will result a long filling loop
  */
+
+// For Fusion, it should be +9.7.x
+int version = EAGLE_VERSION; // 9
+int release = EAGLE_RELEASE; // 7
+
+if(version == 9)
+{
+  if(release >= 7) // The last standalone version of EAGLE is 9.6.2
+  {
+    dlgMessageBox("This ULP is for standalone Eagle; for Autodesk Fusion, use neg_silk_for_fusion.ulp.","+OK");
+  }
+}
 	 
 string CMD="", SilkName="", silkspool="", Header = 
 "Set Wire_Bend 2;\n" + 

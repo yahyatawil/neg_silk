@@ -15,6 +15,22 @@
  Edited by Romain Lamothe 2024 Autodesk Fusion port
  */
 
+// For Fusion, it should be +9.7.x
+int version = EAGLE_VERSION; // 9
+int release = EAGLE_RELEASE; // 7
+
+if(version == 9)
+{
+  if(release <= 6) // The last standalone version of EAGLE is 9.6.2
+  {
+    dlgMessageBox("This ULP is for Autodesk Fusion; for standalone Eagle, use neg_silk.ulp.","+OK");
+  }
+}
+else if(version < 9) // older versions
+{
+    dlgMessageBox("This ULP is for Autodesk Fusion; for standalone Eagle, use neg_silk.ulp.","+OK");
+}
+
 string CMD = "SET WIRE_BEND 2;\n"; // Wire bend 2 = Straight connection
 CMD += "LAYER 21;\n"; // Go to layer SilkscreenTop
 CMD += "DISPLAY NONE 21;\n"; // Only show SilkscreenTop
